@@ -8,17 +8,18 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-
 	"github.com/beevik/etree"
+	"github.com/google/uuid"
 	"github.com/russellhaering/goxmldsig/etreeutils"
 )
 
 type SigningContext struct {
-	Hash          crypto.Hash
-	KeyStore      X509KeyStore
-	IdAttribute   string
-	Prefix        string
-	Canonicalizer Canonicalizer
+	Hash               crypto.Hash
+	KeyStore           X509KeyStore
+	IdAttribute        string
+	Prefix             string
+	Canonicalizer      Canonicalizer
+	GenerateDataIDFunc func() string
 }
 
 func NewDefaultSigningContext(ks X509KeyStore) *SigningContext {
@@ -28,6 +29,10 @@ func NewDefaultSigningContext(ks X509KeyStore) *SigningContext {
 		IdAttribute:   DefaultIdAttr,
 		Prefix:        DefaultPrefix,
 		Canonicalizer: MakeC14N11Canonicalizer(),
+		GenerateDataIDFunc: func() string {
+			id, _ := uuid.NewRandom()
+			return id.String()
+		},
 	}
 }
 
@@ -91,7 +96,7 @@ func (ctx *SigningContext) constructSignedInfo(el *etree.Element, enveloped bool
 
 	dataId := el.SelectAttrValue(ctx.IdAttribute, "")
 	if dataId == "" {
-		return nil, errors.New("Missing data ID")
+		dataId = ctx.GenerateDataIDFunc()
 	}
 
 	reference.CreateAttr(URIAttr, "#"+dataId)
