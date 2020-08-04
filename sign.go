@@ -3,7 +3,6 @@ package dsig
 import (
 	"crypto"
 	"crypto/rand"
-	"crypto/rsa"
 	_ "crypto/sha1"
 	_ "crypto/sha256"
 	"encoding/base64"
@@ -183,8 +182,7 @@ func (ctx *SigningContext) ConstructSignature(el *etree.Element, enveloped bool)
 			return nil, err
 		}
 	}
-
-	rawSignature, err := rsa.SignPKCS1v15(rand.Reader, key, ctx.Hash, digest)
+	rawSignature, err := key.Sign(rand.Reader, digest, ctx.Hash)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +247,7 @@ func (ctx *SigningContext) SignString(content string) ([]byte, error) {
 	var signature []byte
 	if key, _, err := ctx.KeyStore.GetKeyPair(); err != nil {
 		return nil, fmt.Errorf("unable to fetch key for signing: %v", err)
-	} else if signature, err = rsa.SignPKCS1v15(rand.Reader, key, ctx.Hash, digest); err != nil {
+	} else if signature, err = key.Sign(rand.Reader, digest, ctx.Hash); err != nil {
 		return nil, fmt.Errorf("error signing: %v", err)
 	}
 	return signature, nil
