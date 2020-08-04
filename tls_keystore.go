@@ -1,6 +1,7 @@
 package dsig
 
 import (
+	"crypto"
 	"crypto/rsa"
 	"crypto/tls"
 	"fmt"
@@ -17,7 +18,7 @@ var (
 type TLSCertKeyStore tls.Certificate
 
 //GetKeyPair implements X509KeyStore using the underlying tls.Certificate
-func (d TLSCertKeyStore) GetKeyPair() (*rsa.PrivateKey, []byte, error) {
+func (d TLSCertKeyStore) GetKeyPair() (crypto.Signer, []byte, error) {
 	pk, ok := d.PrivateKey.(*rsa.PrivateKey)
 
 	if !ok {
